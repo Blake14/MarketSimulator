@@ -7,6 +7,8 @@ const AppPointer = ({
 	MarketSimulatorStyles,
 	setCurrentPageId,
 	IndustryData,
+	companyData,
+	setCompanyData,
 }) => {
 	if (currentPageId === 0) {
 		return (
@@ -14,6 +16,8 @@ const AppPointer = ({
 				MarketSimulatorStyles={MarketSimulatorStyles}
 				setCurrentPageId={setCurrentPageId}
 				IndustryData={IndustryData}
+				companyData={companyData}
+				setCompanyData={setCompanyData}
 			/>
 		);
 	} else if (currentPageId === 1) {

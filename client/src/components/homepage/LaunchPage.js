@@ -9,57 +9,126 @@ const LaunchPage = ({
 	MarketSimulatorStyles,
 	setCurrentPageId,
 	IndustryData,
+	companyData,
+	setCompanyData,
 }) => {
-	const [openTime, setOpenTime] = useState(8); // 8 corresponds to '08:00'
-	const [closeTime, setCloseTime] = useState(17);
+	const [parentCompanyName, setParentCompanyName] = useState(
+		companyData.parentCompanyName
+	);
+	const [shopName, setShopName] = useState(companyData.shopData[0].shopName);
+	const [industryId, setIndustryId] = useState(
+		companyData.shopData[0].industryId
+	);
+	const [employeeCnt, setEmployeeCnt] = useState(
+		companyData.shopData[0].employeeCnt
+	);
+	const [minWage, setMinWage] = useState(companyData.shopData[0].minWage);
+	const [allowTips, setAllowTips] = useState(companyData.shopData[0].allowTips);
+	const [openTime, setOpenTime] = useState(companyData.shopData[0].openHr);
+	const [closeTime, setCloseTime] = useState(companyData.shopData[0].closeHr);
+	const [primaryColor, setPrimaryColor] = useState(
+		companyData.shopData[0].colors[0] || '#00296b'
+	);
+	const [secondaryColor, setSecondaryColor] = useState(
+		companyData.shopData[0].colors[1] || '#ffd500'
+	);
+
+	const [lunchOpenHr, setLunchOpenHr] = useState(
+		companyData.shopData[0].lunchOpenHr
+	);
+	const [lunchCloseHr, setLunchCloseHr] = useState(
+		companyData.shopData[0].lunchCloseHr
+	);
+	const [isUpdateClicked, setIsUpdateClicked] = useState(false);
 	const [launchGameMenu, setLaunchGameMenu] = useState(false);
-	const [daySelections, setDaySelections] = useState([
+	const fullWeek = [
 		{
 			dayLong: 'Monday',
 			dayShort: 'Mo',
-			selected: true,
+			selected: companyData.shopData[0].openDays.includes('Mo'),
 		},
 		{
 			dayLong: 'Tuesday',
 			dayShort: 'Tu',
-			selected: true,
+			selected: companyData.shopData[0].openDays.includes('Tu'),
 		},
 		{
 			dayLong: 'Wednesday',
 			dayShort: 'We',
-			selected: true,
+			selected: companyData.shopData[0].openDays.includes('We'),
 		},
 		{
 			dayLong: 'Thursday',
 			dayShort: 'Th',
-			selected: true,
+			selected: companyData.shopData[0].openDays.includes('Th'),
 		},
 		{
 			dayLong: 'Friday',
 			dayShort: 'Fr',
-			selected: true,
+			selected: companyData.shopData[0].openDays.includes('Fr'),
 		},
-		{
-			dayLong: 'Saturday',
-			dayShort: 'Sa',
-			selected: true,
-		},
-		{
-			dayLong: 'Sunday',
-			dayShort: 'Su',
-			selected: true,
-		},
-	]);
+		{ dayLong: 'Saturday', dayShort: 'Sa', selected: false }, // Non-interactive
+		{ dayLong: 'Sunday', dayShort: 'Su', selected: false }, // Non-interactive
+	];
+
+	// Adjust initial selection based on companyData
+	const [daySelections, setDaySelections] = useState(fullWeek);
 	const toggleDaySelection = (index) => {
-		// Create a new array with all items
-		const newDaySelections = [...daySelections];
+		// Only toggle if it's a weekday (exclude index 5 and 6 which are Saturday and Sunday)
+		if (index < 5) {
+			const newDaySelections = [...daySelections];
+			newDaySelections[index].selected = !newDaySelections[index].selected;
 
-		// Toggle the selected property of the element at the given index
-		newDaySelections[index].selected = !newDaySelections[index].selected;
+			setDaySelections(newDaySelections);
 
-		// Update the state with the new array
-		setDaySelections(newDaySelections);
+			const updatedOpenDays = newDaySelections
+				.filter((day, idx) => day.selected && idx < 5) // Filter out weekends
+				.map((day) => day.dayShort);
+
+			// Update companyData with the new openDays
+			const newCompanyData = {
+				...companyData,
+				shopData: companyData.shopData.map((shop) => ({
+					...shop,
+					openDays: updatedOpenDays,
+				})),
+			};
+			setCompanyData(newCompanyData);
+		}
 	};
+
+	useEffect(() => {
+		if (isUpdateClicked) {
+			setCurrentPageId(1);
+			setIsUpdateClicked(false); // Reset the trigger
+			console.log(companyData);
+		}
+	}, [companyData, isUpdateClicked, setCurrentPageId]);
+
+	const handleUpdateCompanyData = () => {
+		const updatedCompanyData = {
+			...companyData,
+			parentCompanyName,
+			shopData: [
+				{
+					...companyData.shopData[0],
+					shopName,
+					industryId,
+					employeeCnt,
+					minWage,
+					allowTips,
+					openHr: openTime,
+					closeHr: closeTime,
+					colors: [primaryColor, secondaryColor],
+					lunchOpenHr,
+					lunchCloseHr,
+				},
+			],
+		};
+
+		setCompanyData(updatedCompanyData);
+	};
+
 	return (
 		<div>
 			<Image src={logo} />
@@ -90,6 +159,9 @@ const LaunchPage = ({
 				nextBtnTitle={'Launch'}
 				setCurrentPageId={setCurrentPageId}
 				nextPageId={1}
+				companyData={companyData}
+				onNext={handleUpdateCompanyData}
+				setIsUpdateClicked={setIsUpdateClicked}
 			>
 				<Form
 					style={{
@@ -105,7 +177,10 @@ const LaunchPage = ({
 					>
 						<Form.Group className='mb-3' controlId='formBasicEmail'>
 							<Form.Label>Parent Company Name:</Form.Label>
-							<Form.Control placeholder='Company ABC' />
+							<Form.Control
+								value={parentCompanyName}
+								onChange={(e) => setParentCompanyName(e.target.value)}
+							/>
 						</Form.Group>
 					</div>
 					<hr />
@@ -132,21 +207,27 @@ const LaunchPage = ({
 							>
 								<Form.Group className='mb-3' controlId='formBasicEmail'>
 									<Form.Label>Shop Name:</Form.Label>
-									<Form.Control placeholder='Shop ABC' />
+									<Form.Control
+										placeholder='Shop ABC'
+										value={shopName}
+										onChange={(e) => setShopName(e.target.value)}
+									/>
 									<Form.Label style={{ marginTop: 25 }}>Industry:</Form.Label>
-									<Form.Select aria-label='Default select example'>
+									<Form.Select
+										value={industryId}
+										onChange={(e) => setIndustryId(e.target.value)}
+										aria-label='Default select example'
+									>
 										{IndustryData.sort((a, b) =>
 											a.industryName.localeCompare(b.industryName)
-										).map((industry) => {
-											return (
-												<option
-													key={industry.industryId}
-													value={industry.industryId}
-												>
-													{industry.icon} {industry.industryName}
-												</option>
-											);
-										})}
+										).map((industry) => (
+											<option
+												key={industry.industryId}
+												value={industry.industryId}
+											>
+												{industry.industryName}
+											</option>
+										))}
 									</Form.Select>
 								</Form.Group>
 							</div>
@@ -216,77 +297,45 @@ const LaunchPage = ({
 												alignItems: 'center',
 											}}
 										>
-											{daySelections.map((day, dayIndex) => {
-												if (day.dayShort === 'Sa' || day.dayShort === 'Su') {
-													return (
-														<div
-															key={dayIndex}
-															style={{
-																width: 35,
-																height: 35,
-																padding: 2,
-																margin: 2,
-																fontSize: 13,
-																fontVariant: 'all-petite-caps',
-															}}
-														>
-															<div
-																style={{
-																	border: `2px solid #ced4da`,
-																	borderRadius: 3,
-																	width: '100%',
-																	height: '100%',
-																	display: 'flex',
-																	justifyContent: 'center',
-																	alignItems: 'center',
-																	color: 'white',
-																	backgroundColor: '#ced4da',
-																}}
-															>
-																<strong>{day.dayShort}</strong>
-															</div>
-														</div>
-													);
-												} else {
-													return (
-														<div
-															key={dayIndex}
-															style={{
-																width: 35,
-																height: 35,
-																padding: 2,
-																margin: 2,
-																fontSize: 13,
-																fontVariant: 'all-petite-caps',
-															}}
-														>
-															<div
-																onClick={() => toggleDaySelection(dayIndex)}
-																style={{
-																	border: `2px solid ${MarketSimulatorStyles.DarkModeColors.moduleBackground}`,
-																	borderRadius: 3,
-																	width: '100%',
-																	height: '100%',
-																	cursor: 'pointer',
-																	display: 'flex',
-																	justifyContent: 'center',
-																	alignItems: 'center',
-																	color: day.selected
-																		? 'white'
-																		: MarketSimulatorStyles.DarkModeColors
-																				.moduleBackground,
-																	backgroundColor: day.selected
-																		? MarketSimulatorStyles.DarkModeColors
-																				.moduleBackground
-																		: 'white',
-																}}
-															>
-																<strong>{day.dayShort}</strong>
-															</div>
-														</div>
-													);
-												}
-											})}
+											{daySelections.map((day, index) => (
+												<div
+													key={index}
+													style={{
+														width: 35,
+														height: 35,
+														padding: 2,
+														margin: 2,
+														fontSize: 13,
+														fontVariant: 'all-petite-caps',
+													}}
+												>
+													<div
+														onClick={() => toggleDaySelection(index)}
+														style={{
+															border: `2px solid ${
+																!day.selected
+																	? '#ced4da'
+																	: MarketSimulatorStyles.DarkModeColors
+																			.moduleBackground
+															}`,
+															borderRadius: 3,
+															width: '100%',
+															height: '100%',
+															display: 'flex',
+															justifyContent: 'center',
+															alignItems: 'center',
+															color: 'white',
+															backgroundColor: day.selected
+																? MarketSimulatorStyles.DarkModeColors
+																		.moduleBackground
+																: '#ced4da',
+															cursor: index < 5 ? 'pointer' : 'default',
+														}}
+													>
+														<strong>{day.dayShort}</strong>
+													</div>
+												</div>
+											))}
 										</div>
 									</div>
 									<Form.Label>Shop Colors:</Form.Label>
@@ -299,12 +348,14 @@ const LaunchPage = ({
 									>
 										<Form.Control
 											type='color'
-											defaultValue='#00296b'
+											value={primaryColor}
+											onChange={(e) => setPrimaryColor(e.target.value)}
 											title='Primary Color'
 										/>
 										<Form.Control
 											type='color'
-											defaultValue='#ffd500'
+											value={secondaryColor}
+											onChange={(e) => setSecondaryColor(e.target.value)}
 											title='Secondary Color'
 										/>
 									</div>

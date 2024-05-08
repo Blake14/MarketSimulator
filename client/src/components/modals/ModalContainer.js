@@ -10,6 +10,8 @@ const ModalContainer = ({
 	nextBtnTitle,
 	setCurrentPageId,
 	nextPageId,
+	onNext,
+	setIsUpdateClicked,
 }) => {
 	return (
 		<Modal
@@ -39,6 +41,8 @@ const ModalContainer = ({
 				<Button
 					variant='info'
 					onClick={() => {
+						setIsUpdateClicked(true);
+						onNext();
 						setCurrentPageId(nextPageId);
 					}}
 				>
