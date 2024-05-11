@@ -10,23 +10,29 @@ const AppPointer = ({
 	companyData,
 	setCompanyData,
 }) => {
-	if (currentPageId === 0) {
-		return (
-			<LaunchPage
-				MarketSimulatorStyles={MarketSimulatorStyles}
-				setCurrentPageId={setCurrentPageId}
-				IndustryData={IndustryData}
-				companyData={companyData}
-				setCompanyData={setCompanyData}
-			/>
-		);
-	} else if (currentPageId === 1) {
-		return (
-			<Homepage
-				MarketSimulatorStyles={MarketSimulatorStyles}
-				setCurrentPageId={setCurrentPageId}
-			/>
-		);
+	console.log('Current Page ID:', currentPageId); // Log to check what currentPageId is being set to
+
+	switch (currentPageId) {
+		case 0:
+			return (
+				<LaunchPage
+					MarketSimulatorStyles={MarketSimulatorStyles}
+					setCurrentPageId={setCurrentPageId}
+					IndustryData={IndustryData}
+					companyData={companyData}
+					setCompanyData={setCompanyData}
+				/>
+			);
+		case 1:
+			return (
+				<Homepage
+					MarketSimulatorStyles={MarketSimulatorStyles}
+					setCurrentPageId={setCurrentPageId}
+					companyData={companyData}
+				/>
+			);
+		default:
+			return <div>No page found.</div>;
 	}
 };
 
